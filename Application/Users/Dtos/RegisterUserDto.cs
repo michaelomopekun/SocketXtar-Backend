@@ -10,6 +10,9 @@ public class RegisterUserRequest
 
 public class RegisterUserResponse
 {
-    public Guid UserId { get; set; }
-    public string UserName { get; set; } = string.Empty;
+    public string UserId { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? Token { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty; 
 }
