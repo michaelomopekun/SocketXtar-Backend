@@ -1,9 +1,12 @@
 using MediatR;
+// using DotNetEnv
 using MongoDB.Driver;
 using Persistence.Data;
 using Persistence.Data.Mongo;
 using Microsoft.EntityFrameworkCore;
-using static Persistence.Data.Mongo.ChatDbContext;
+using Infrastructure.Helpers;
+
+EnvLoader.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +15,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+Console.WriteLine("========⌚⌚⌚"+Environment.GetEnvironmentVariable("POSTGRES_HOST")+"========⌚⌚⌚");
 
 // Configure PostgresDbContext
 var connectionString = $"Server={Environment.GetEnvironmentVariable("POSTGRES_HOST")};" +
@@ -35,7 +39,7 @@ builder.Services.AddSingleton<IMongoClient>(s =>
 
 builder.Services.AddSingleton<ChatDbContext>();
 
-// builder.Services.AddMediatR(typeof(RegisterUserHandler).Assembly);
+builder.Services.AddMediatR(typeof(Program).Assembly);
 
 // redis config
 builder.Services.AddStackExchangeRedisCache(options =>

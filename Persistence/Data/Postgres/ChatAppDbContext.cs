@@ -1,3 +1,6 @@
+using MongoDB.Driver;
+using Domain.Entities;
+using Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -7,11 +10,13 @@ public class ChatAppDBContext : DbContext
 {
     public ChatAppDBContext(DbContextOptions<ChatAppDBContext> options) : base(options) { }
 
-    // public DbSet<User> Users { get; set; }
+    public DbSet<User>? User { get; set; }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(ModelBuilder builder)
     {
-        base.OnModelCreating(modelBuilder);
+        base.OnModelCreating(builder);
+
+        builder.ApplyConfiguration(new UserConfiguration());
 
         var stringListConverter = new ValueConverter<List<string>, string>(
             v => string.Join(',', v ?? new List<string>()),
