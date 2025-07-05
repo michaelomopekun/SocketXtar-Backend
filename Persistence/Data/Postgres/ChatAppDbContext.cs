@@ -10,7 +10,7 @@ public class ChatAppDBContext : DbContext
 {
     public ChatAppDBContext(DbContextOptions<ChatAppDBContext> options) : base(options) { }
 
-    public DbSet<User>? User { get; set; }
+    public DbSet<User> User { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

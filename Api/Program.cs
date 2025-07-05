@@ -5,6 +5,8 @@ using Persistence.Data;
 using Persistence.Data.Mongo;
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.Helpers;
+using Application.Users.Common.Interface;
+using Infrastructure.Services;
 
 EnvLoader.Load();
 
@@ -47,6 +49,9 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.Configuration = Environment.GetEnvironmentVariable("REDIS");
     options.InstanceName = "XtarSocket:";
 });
+
+
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 
 var app = builder.Build();
