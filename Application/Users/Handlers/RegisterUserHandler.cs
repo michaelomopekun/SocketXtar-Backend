@@ -43,6 +43,8 @@ public class RegisterUserHandler
                 HashedPassword = hashPassword
             };
 
+            var isRegistered = await _userRepository.AddUserAsync(newUser);
+
             var secret = Environment.GetEnvironmentVariable("EMAIL_SECRET") ?? throw new ArgumentException("env variable for EMAIL_SECRET is not set");
 
             var token = EmailTokenGenerator.Generate(newUser.Email, secret, 15);

@@ -1,25 +1,40 @@
 using Domain.Entities;
 using Persistence.Data;
-using Domain.Interfaces.Repositories;
+using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using Domain.Interfaces.Repositories;
 
 namespace Infrastructure.Repositories;
 
 public class UserRepository : IUserRepository
 {
     private readonly ChatAppDBContext _context;
+    private readonly ILogger<UserRepository> _logger;
 
-    public UserRepository(ChatAppDBContext context)
+    public UserRepository(ChatAppDBContext context, ILogger<UserRepository> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
 
-    public async Task AddUserAsync(User user)
+    public async Task<bool> AddUserAsync(User user)
     {
-        await _context.User.AddAsync(user);
+        try
+        {
+            await _context.User.AddAsync(user);
 
-        await SaveChangesAsync();
+            await SaveChangesAsync();
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to register user and save in DB");
+
+            return false;
+            throw;
+        }
     }
 
     public async Task<User?> GetUserByEmailAsync(string email)
