@@ -1,3 +1,4 @@
+using MediatR;
 using Domain.Entities;
 using Application.Dtos;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ using Application.Users.Common.Interface;
 namespace Application.Users.Handlers;
 
 
-public class RegisterUserHandler
+public class RegisterUserHandler : IRequestHandler<RegisterUserRequest, RegisterUserResponse>
 {
     private readonly IUserRepository _userRepository;
     private readonly ILogger<RegisterUserHandler> _logger;
@@ -25,11 +26,14 @@ public class RegisterUserHandler
         _redis = redis;
     }
 
-    public async Task<RegisterUserResponse> Handler(RegisterUserRequest request)
+    public async Task<RegisterUserResponse> Handle(RegisterUserRequest request, CancellationToken cancellationToken)
     {
         try
         {
-            var user = _userRepository.GetUserByEmailAsync(request.Email);
+            if (request == null) throw new ArgumentNullException(nameof(request));
+
+            var user = await _userRepository.GetUserByEmailAsync(request.Email);
+
             if (user is not null) throw new UserAlreadyExistException("User with this email already exist");
 
             var hashPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
@@ -53,6 +57,8 @@ public class RegisterUserHandler
 
             await _emailService.SendVerificationEmailAsync(newUser.Email, token);
 
+            _logger.LogInformation("==========✅ User registered and verification email sent to {Email}==========", newUser.Email);
+
             return new RegisterUserResponse
             {
                 UserId = newUser.UserId.ToString(),
@@ -69,6 +75,7 @@ public class RegisterUserHandler
             throw;
         }
     }
+
 
     private async Task<string> GenerateUsername(string firstName, string lastName)
     {

@@ -30,7 +30,7 @@ public class UserRepository : IUserRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to register user and save in DB");
+            _logger.LogError(ex, "=========❌Failed to register user and save in DB=========");
 
             return false;
             throw;
@@ -56,6 +56,25 @@ public class UserRepository : IUserRepository
     {
         await _context.SaveChangesAsync();
     }
+
+    public async Task<bool> UpdateUserAsync(User user)
+    {
+        try
+        {
+            _context.User.Update(user);
+
+            await SaveChangesAsync();
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "=========❌Failed to update user in DB==========");
+
+            return false;
+        }
+    }
+
 
     public async Task<bool> UserExistByUsernameAsync(string username)
     {
