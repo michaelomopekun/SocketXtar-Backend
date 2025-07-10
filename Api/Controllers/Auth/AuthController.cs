@@ -1,6 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using Application.Dtos;
 using Domain.Interfaces.Repositories;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.IdentityModel.Tokens;
@@ -10,13 +12,15 @@ namespace Api.Controllers.Auth;
 public class AuthController : ControllerBase
 {
     private readonly IDistributedCache _redis;
+    private readonly IMediator _mediator;
     private readonly ILogger<AuthController> _logger;
     private readonly IUserRepository _userRepository;
 
-    public AuthController(ILogger<AuthController> logger, IDistributedCache redis, IUserRepository userRepository)
+    public AuthController(ILogger<AuthController> logger, IDistributedCache redis, IUserRepository userRepository, IMediator mediator)
     {
-        _logger = logger;
         _redis = redis;
+        _logger = logger;
+        _mediator = mediator;
         _userRepository = userRepository;
     }
 
@@ -79,7 +83,19 @@ public class AuthController : ControllerBase
     }
 
 
-    // [HttpPost]
-    // [Route("onboard")]
-    // public Task<IActionResult> 
+    [HttpPost]
+    [Route("onboard")]
+    public async Task<IActionResult> Onboard([FromBody] RegisterUserRequest request)
+    {
+        try
+        {
+            var result = await _mediator.Send(request);
+            return Ok(new { status = "success", data = result });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"error onboarding User {request.Email}");
+            return StatusCode(500, new { status = "error", message = $"Onboard :endpoint: Error Onboarding user {request.Email}." });
+        }
+    }
 }

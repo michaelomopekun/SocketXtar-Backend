@@ -32,7 +32,6 @@ public class UserRepository : IUserRepository
         {
             _logger.LogError(ex, "=========❌Failed to register user and save in DB=========");
 
-            return false;
             throw;
         }
     }

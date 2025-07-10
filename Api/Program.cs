@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using Infrastructure.Helpers;
 using Application.Users.Common.Interface;
 using Infrastructure.Services;
+using Domain.Interfaces.Repositories;
+using Infrastructure.Repositories;
+using Application.Users.Handlers;
 
 EnvLoader.Load();
 
@@ -41,7 +44,7 @@ builder.Services.AddSingleton<IMongoClient>(s =>
 
 builder.Services.AddSingleton<ChatDbContext>();
 
-builder.Services.AddMediatR(typeof(Program).Assembly);
+builder.Services.AddMediatR(typeof(RegisterUserHandler).Assembly);
 
 // redis config
 builder.Services.AddStackExchangeRedisCache(options =>
@@ -52,6 +55,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
 
 
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 
 var app = builder.Build();

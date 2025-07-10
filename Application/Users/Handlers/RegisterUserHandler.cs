@@ -44,28 +44,39 @@ public class RegisterUserHandler : IRequestHandler<RegisterUserRequest, Register
                 LastName = request.LastName,
                 UserName = await GenerateUsername(request.FirstName, request.LastName),
                 Email = request.Email,
-                HashedPassword = hashPassword
+                HashedPassword = hashPassword,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
             var isRegistered = await _userRepository.AddUserAsync(newUser);
 
-            var secret = Environment.GetEnvironmentVariable("EMAIL_SECRET") ?? throw new ArgumentException("env variable for EMAIL_SECRET is not set");
+            if (isRegistered)
+            {
 
-            var token = EmailTokenGenerator.Generate(newUser.Email, secret, 15);
+                var secret = Environment.GetEnvironmentVariable("EMAIL_SECRET") ?? throw new ArgumentException("env variable for EMAIL_SECRET is not set");
 
-            await _redis.SetStringAsync($"verify:{newUser.Email}", token, new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15) });
+                var token = EmailTokenGenerator.Generate(newUser.Email, secret, 15);
 
-            await _emailService.SendVerificationEmailAsync(newUser.Email, token);
+                await _redis.SetStringAsync($"verify:{newUser.Email}", token, new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15) });
 
-            _logger.LogInformation("==========✅ User registered and verification email sent to {Email}==========", newUser.Email);
+                await _emailService.SendVerificationEmailAsync(newUser.Email, token);
+
+                _logger.LogInformation("==========✅ User registered and verification email sent to {Email}==========", newUser.Email);
+
+                return new RegisterUserResponse
+                {
+                    UserId = newUser.UserId.ToString(),
+                    Username = newUser.UserName,
+                    Email = newUser.Email,
+                    Token = token,
+                    Message = "Registration successful. Please check your email to verify your account."
+                };
+            }
 
             return new RegisterUserResponse
             {
-                UserId = newUser.UserId.ToString(),
-                Username = newUser.UserName,
-                Email = newUser.Email,
-                Token = token,
-                Message = "Registration successful. Please check your email to verify your account."
+                Message = $"Registration of user {newUser.Email} failed"
             };
         }
         catch (Exception ex)
