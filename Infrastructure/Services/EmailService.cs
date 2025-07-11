@@ -1,4 +1,6 @@
 using Application.Users.Common.Interface;
+using DnsClient.Internal;
+using Microsoft.Extensions.Logging;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 
@@ -6,19 +8,26 @@ namespace Infrastructure.Services;
 
 public class EmailService : IEmailService
 {
+    private readonly ILogger<EmailService> _logger;
+
+    public EmailService(ILogger<EmailService> logger)
+    {
+        _logger = logger;
+    }
+
     public async Task SendVerificationEmailAsync(string toEmail, string token)
     {
         var apiKey = Environment.GetEnvironmentVariable("SENDGRID_KEY");
 
         var client = new SendGridClient(apiKey);
 
-        var from = new EmailAddress("noreply@socketxtar.com", "SocketXtar");
+        var from = new EmailAddress("galaxiasmovies@gmail.com", "SocketXtar");
 
         var subject = "Verify your SocketXtar email";
 
-        var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_BASE_URL"); 
+        var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_BASE_URL");
 
-        var link = $"{frontendUrl}/verify-email?token={token}&email={toEmail}";
+        var link = $"{frontendUrl}/verify-email?email={toEmail}&token={token}";
 
         var htmlContent = $@"
             <div style='font-family: Arial, sans-serif; background-color: #f6f8fa; padding: 40px;'>
@@ -47,7 +56,9 @@ public class EmailService : IEmailService
 
         var msg = MailHelper.CreateSingleEmail(from, to, subject, "", htmlContent);
 
-        await client.SendEmailAsync(msg);
+        var response = await client.SendEmailAsync(msg);
+
+        _logger.LogInformation("📤 SendGrid response: {StatusCode}", response.StatusCode);
     }
 
 }

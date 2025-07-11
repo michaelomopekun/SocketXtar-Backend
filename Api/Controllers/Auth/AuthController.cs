@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Application.Dtos;
+using Application.Users.Dtos;
 using Domain.Interfaces.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -38,7 +39,7 @@ public class AuthController : ControllerBase
 
             var storedToken = await _redis.GetStringAsync($"verify:{email}");
 
-            if (storedToken is null || storedToken != token) return BadRequest("Invalid or expired token.");
+            if (storedToken is null || storedToken != token) return BadRequest(new { status = "error", message = "Invalid or expired token." });
 
             var handler = new JwtSecurityTokenHandler();
 
@@ -96,6 +97,22 @@ public class AuthController : ControllerBase
         {
             _logger.LogError(ex, $"error onboarding User {request.Email}");
             return StatusCode(500, new { status = "error", message = $"Onboard :endpoint: Error Onboarding user {request.Email}." });
+        }
+    }
+
+    [HttpPost]
+    [Route("login")]
+    public async Task<IActionResult> Login([FromBody] LoginUserRequest request)
+    {
+        try
+        {
+            var result = await _mediator.Send(request);
+            return Ok(new { status = "success", data = result });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"error logging in User {request.Email}");
+            return StatusCode(500, new { status = "error", message = $"Login :endpoint: Error logging in user {request.Email}." });
         }
     }
 }

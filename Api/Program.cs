@@ -56,6 +56,8 @@ builder.Services.AddStackExchangeRedisCache(options =>
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+
 
 
 var app = builder.Build();
