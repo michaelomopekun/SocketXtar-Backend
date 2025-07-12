@@ -1,9 +1,11 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Application.Dtos;
+using Application.Users.Common.Exceptions;
 using Application.Users.Dtos;
 using Domain.Interfaces.Repositories;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.IdentityModel.Tokens;
@@ -31,59 +33,42 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> VerifyEmail([FromQuery] string email, [FromQuery] string token)
+    public async Task<IActionResult> VerifyEmail([FromQuery] EmailVerificationRequest request)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token)) return BadRequest(new { status = "error", message = "Missing email or token" });
+            var response = await _mediator.Send(request);
 
-            var storedToken = await _redis.GetStringAsync($"verify:{email}");
+            return Ok(new { status = "success", data = response });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogError(ex, "❌user does not exist");
 
-            if (storedToken is null || storedToken != token) return BadRequest(new { status = "error", message = "Invalid or expired token." });
+            return BadRequest(new { status = "error", message = ex.Message });
+        }
+        catch (InvalidOrExpiredTokenException ex)
+        {
+            _logger.LogError(ex, "❌token is invalid or empty");
 
-            var handler = new JwtSecurityTokenHandler();
+            return BadRequest(new { status = "error", message = ex.Message });
+        }
+        catch (NullReferenceException ex)
+        {
+            _logger.LogError(ex, "❌email or token is empty");
 
-            var secret = Environment.GetEnvironmentVariable("EMAIL_SECRET") ?? throw new NullReferenceException("env var EMAIL_SECRET cant be found");
-
-            var key = Encoding.ASCII.GetBytes(secret);
-
-            handler.ValidateToken(token, new TokenValidationParameters
-            {
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                ValidateLifetime = true,
-                IssuerSigningKey = new SymmetricSecurityKey(key),
-                ValidateIssuerSigningKey = true
-            }, out SecurityToken _);
-
-            var user = await _userRepository.GetUserByEmailAsync(email);
-
-            if (user == null) return NotFound(new { status = "error", message = $"User: {email} not found" });
-
-            user.EmailConfirmed = true;
-
-            var update = await _userRepository.UpdateUserAsync(user);
-
-            if (update == true)
-            {
-                await _redis.RemoveAsync($"verify:{email}");
-
-                _logger.LogInformation("==========✅ Email verified successfully.==========");
-
-                return Ok(new { status = "success", message = "Email verified successfully." });
-            }
-
-            return StatusCode(500, new { status = "error", message = "Failed to update email status." });
+            return BadRequest(new { status = "error", message = ex.Message });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "==========❌Error while processing email verification==========");
 
-            return StatusCode(500, new { status = "error", message = "VERIFY EMAIL :endpoint: Error confirming email", errorMessage = ex.Message });
+            return StatusCode(500, new { status = "error", message = ex.Message });
         }
     }
 
 
+    [Authorize]
     [HttpPost]
     [Route("onboard")]
     public async Task<IActionResult> Onboard([FromBody] RegisterUserRequest request)
@@ -93,10 +78,25 @@ public class AuthController : ControllerBase
             var result = await _mediator.Send(request);
             return Ok(new { status = "success", data = result });
         }
+        catch (NullReferenceException ex)
+        {
+            _logger.LogError(ex, $"❌value is empty");
+            return BadRequest(new { status = "error", message = ex.Message });
+        }
+        catch (ArgumentNullException ex)
+        {
+            _logger.LogError(ex, $"❌Argument request is empty");
+            return BadRequest(new { status = "error", message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogError(ex, $"❌Unauthorized access attempt by User {request.Email}");
+            return Unauthorized(new { status = "error", message = ex.Message });
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"error onboarding User {request.Email}");
-            return StatusCode(500, new { status = "error", message = $"Onboard :endpoint: Error Onboarding user {request.Email}." });
+            _logger.LogError(ex, $"❌error onboarding User {request.Email}");
+            return StatusCode(500, new { status = "error", message = ex.Message });
         }
     }
 
@@ -109,10 +109,56 @@ public class AuthController : ControllerBase
             var result = await _mediator.Send(request);
             return Ok(new { status = "success", data = result });
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex, $"Unauthorized access attempt by User {request.Email}");
+            return Unauthorized(new { status = "error", message = ex.Message });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"error logging in User {request.Email}");
-            return StatusCode(500, new { status = "error", message = $"Login :endpoint: Error logging in user {request.Email}." });
+            return StatusCode(500, new { status = "error", message = ex.Message });
         }
     }
+
+
+    [Authorize]
+    [HttpPost]
+    [Route("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        try
+        {
+            var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return Unauthorized(new { status = "error", message = "Missing token, can't invalidate session without token." });
+            }
+
+            var handler = new JwtSecurityTokenHandler();
+
+            var jwtToken = handler.ReadJwtToken(token) as JwtSecurityToken;
+
+            var expires = jwtToken?.ValidTo ?? DateTime.UtcNow.AddHours(2);
+
+            var ttl = expires - DateTime.UtcNow;
+
+            await _redis.SetStringAsync($"blacklist:{token}", "revoked", new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = ttl
+            });
+
+            _logger.LogInformation($"✅User logged out successfully. Token: {token} will be blacklisted for {ttl.TotalMinutes} minutes.");
+
+            return Ok(new { status = "success", message = "User logged out successfully." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌Error logging out user.");
+
+            return StatusCode(500, new { status = "error", message = "Error logging out user.", errorMessage = ex.Message });
+        }
+    }
+
 }

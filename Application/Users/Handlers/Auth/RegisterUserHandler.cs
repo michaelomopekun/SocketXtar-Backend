@@ -54,7 +54,7 @@ public class RegisterUserHandler : IRequestHandler<RegisterUserRequest, Register
             if (isRegistered)
             {
 
-                var secret = Environment.GetEnvironmentVariable("EMAIL_SECRET") ?? throw new ArgumentException("env variable for EMAIL_SECRET is not set");
+                var secret = Environment.GetEnvironmentVariable("EMAIL_SECRET") ?? throw new NullReferenceException("env variable for EMAIL_SECRET is not set");
 
                 var token = EmailTokenGenerator.Generate(newUser.Email, secret, 15);
 
@@ -83,7 +83,7 @@ public class RegisterUserHandler : IRequestHandler<RegisterUserRequest, Register
         {
             _logger.LogError(ex, "==========❌Error occured while registering user: " + request.Email + "==========");
 
-            throw;
+            throw new Exception($"Error Onboarding user {request.Email}.");
         }
     }
 
