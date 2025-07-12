@@ -63,10 +63,10 @@ public class VerifyEmailHandler : IRequestHandler<EmailVerificationRequest, Emai
 
                 _logger.LogInformation("==========✅ Email verified successfully.==========");
 
-                return new EmailVerificationResponse { message = "Email verified successfully." };
+                return new EmailVerificationResponse { Message = "Email verified successfully." };
             }
 
-            return new EmailVerificationResponse { message = "Email verification Failed." };
+            return new EmailVerificationResponse { Message = "Email verification Failed." };
         }
         catch (Exception ex)
         {

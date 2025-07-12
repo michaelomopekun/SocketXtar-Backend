@@ -17,15 +17,14 @@ public class AuthController : ControllerBase
     private readonly IDistributedCache _redis;
     private readonly IMediator _mediator;
     private readonly ILogger<AuthController> _logger;
-    private readonly IUserRepository _userRepository;
 
-    public AuthController(ILogger<AuthController> logger, IDistributedCache redis, IUserRepository userRepository, IMediator mediator)
+    public AuthController(ILogger<AuthController> logger, IDistributedCache redis, IMediator mediator)
     {
-        _redis = redis;
+        _redis = redis; 
         _logger = logger;
         _mediator = mediator;
-        _userRepository = userRepository;
     }
+    
 
     [HttpPost]
     [Route("verify-email")]
@@ -68,7 +67,7 @@ public class AuthController : ControllerBase
     }
 
 
-    [Authorize]
+    // [Authorize]
     [HttpPost]
     [Route("onboard")]
     public async Task<IActionResult> Onboard([FromBody] RegisterUserRequest request)

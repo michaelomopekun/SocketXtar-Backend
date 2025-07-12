@@ -1,14 +1,19 @@
+using System.ComponentModel.DataAnnotations;
 using MediatR;
 
 namespace Application.Users.Dtos;
 
 public class EmailVerificationRequest : IRequest<EmailVerificationResponse>
 {
-    public string Token = string.Empty;
-    public string Email = string.Empty;
+    [Required]
+    public string Token { get; set; } = string.Empty;
+
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
 }
 
 public class EmailVerificationResponse
 {
-    public string message = string.Empty;
+    public string Message { get; set; } = string.Empty;
 }

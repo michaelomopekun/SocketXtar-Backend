@@ -10,6 +10,10 @@ using Infrastructure.Services;
 using Domain.Interfaces.Repositories;
 using Infrastructure.Repositories;
 using Application.Users.Handlers;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Api.Middlewares;
 
 EnvLoader.Load();
 
@@ -22,7 +26,7 @@ builder.Services.AddSwaggerGen();
 
 Console.WriteLine("========⌚⌚⌚"+Environment.GetEnvironmentVariable("POSTGRES_HOST")+"========⌚⌚⌚");
 
-// Configure PostgresDbContext
+// Postgres connection string
 var connectionString = $"Server={Environment.GetEnvironmentVariable("POSTGRES_HOST")};" +
                       $"Port={Environment.GetEnvironmentVariable("POSTGRES_PORT")};" +
                       $"Database={Environment.GetEnvironmentVariable("POSTGRES_DB")};" +
@@ -32,6 +36,7 @@ var connectionString = $"Server={Environment.GetEnvironmentVariable("POSTGRES_HO
 
 builder.Services.AddDbContext<ChatAppDBContext>(options =>
     options.UseNpgsql(connectionString));
+
 
 //MongoDB configuration
 builder.Services.AddSingleton<IMongoClient>(s =>
@@ -46,6 +51,7 @@ builder.Services.AddSingleton<ChatDbContext>();
 
 builder.Services.AddMediatR(typeof(RegisterUserHandler).Assembly);
 
+
 // redis config
 builder.Services.AddStackExchangeRedisCache(options =>
 {
@@ -54,13 +60,63 @@ builder.Services.AddStackExchangeRedisCache(options =>
 });
 
 
+// JWT authentication
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        var key = Encoding.ASCII.GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET") ?? throw new NullReferenceException("env var JWT_SECRET cant be found"));
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateLifetime = true
+        };
+    });
+
+
+// JWT + Swagger configuration
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new() { Title = "SocketXtar API", Version = "v1" });
+
+    var securityScheme = new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter: Bearer {your JWT token}",
+        Reference = new OpenApiReference
+        {
+            Type = ReferenceType.SecurityScheme,
+            Id = "Bearer"
+        }
+    };
+
+    options.AddSecurityDefinition("Bearer", securityScheme);
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            securityScheme,
+            Array.Empty<string>()
+        }
+    });
+});
+
+
+// Register services
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
 
-
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -69,7 +125,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+app.UseMiddleware<TokenBlacklistMiddleware>();
+
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
