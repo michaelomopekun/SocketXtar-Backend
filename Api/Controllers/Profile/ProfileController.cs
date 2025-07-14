@@ -1,5 +1,6 @@
 using System.Security.Claims;
-using Application.Users.Handlers.Profile;
+using Application.Dtos;
+using Application.Users.Common.Profile;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -35,7 +36,7 @@ public class ProfileController : ControllerBase
                 return Unauthorized(new { status = "error", message = "User email not found in claims" });
             }
 
-            var profile = await _mediator.Send(new GetUserProfileQuery(email));
+            var profile = await _mediator.Send(new GetUserProfileCommand(email));
             if (profile == null)
             {
                 _logger.LogWarning("❌User profile not found");
@@ -66,4 +67,30 @@ public class ProfileController : ControllerBase
             return StatusCode(500, new { status = "error", message = ex.Message });
         }
     }
+
+
+    [Authorize]
+    [HttpPatch]
+    [Route("profileUpdate")]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest body)
+    {
+        try
+        {
+            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+
+            if (string.IsNullOrEmpty(email)) return Unauthorized(new { status = "error", message = "User email not found in claims" });
+
+            var success = await _mediator.Send(new UpdateUserProfileCommand(email, body));
+
+            if (!success) return NotFound(new { status = "error", message = "User not found or update failed." });
+
+            return Ok(new { status = "success", message = "Profile updated successfully." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌Error updating user profile");
+            return StatusCode(500, new { status = "error", message = ex.Message });
+        }
+    }
+
 }

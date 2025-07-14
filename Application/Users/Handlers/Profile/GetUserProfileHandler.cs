@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Application.Users.Common.Profile;
 using Application.Users.Dtos.Profile;
 using Domain.Interfaces.Repositories;
 using MediatR;
@@ -7,9 +8,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Application.Users.Handlers.Profile;
 
-public record GetUserProfileQuery(string Email) : IRequest<ProfileDto>;
 
-public class GetUserProfileHandler : IRequestHandler<GetUserProfileQuery, ProfileDto>
+public class GetUserProfileHandler : IRequestHandler<GetUserProfileCommand, ProfileDto>
 {
     private readonly IUserRepository _userRepository;
     private readonly ILogger<GetUserProfileHandler> _logger;
@@ -22,7 +22,7 @@ public class GetUserProfileHandler : IRequestHandler<GetUserProfileQuery, Profil
         _redis = redis;
     }
 
-    public async Task<ProfileDto> Handle(GetUserProfileQuery request, CancellationToken cancellationToken)
+    public async Task<ProfileDto> Handle(GetUserProfileCommand request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Fetching user profile for email: {Email}", request.Email);
 
