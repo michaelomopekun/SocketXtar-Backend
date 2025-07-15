@@ -13,14 +13,6 @@ public class CloudinaryService : ICloudinaryService
     public CloudinaryService(Cloudinary cloudinary)
     {
         _cloudinary = cloudinary;
-
-        var account = new Account(
-        Environment.GetEnvironmentVariable("CLOUDINARY_CLOUDNAME"),
-        Environment.GetEnvironmentVariable("CLOUDINARY_APIKEY"),
-        Environment.GetEnvironmentVariable("CLOUDINARY_APISECRET")
-        ) ?? throw new EnvConfigurationException("Cloudinary configuration is missing");
-
-        _cloudinary = new Cloudinary(account);
     }
 
     public async Task<string> UploadImageAsync(IFormFile file)

@@ -14,6 +14,8 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Api.Middlewares;
+using CloudinaryDotNet;
+using Application.Users.Common.Exceptions;
 
 EnvLoader.Load();
 
@@ -108,11 +110,23 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// Cloudinary config
+builder.Services.AddSingleton(serviceProvider =>
+{
+    var account = new Account(
+        Environment.GetEnvironmentVariable("CLOUDNAME"),
+        Environment.GetEnvironmentVariable("CLOUDINARY_API_KEY"),
+        Environment.GetEnvironmentVariable("CLOUDINARY_API_SECRET"));
+
+    return new Cloudinary(account);
+});
+
 
 // Register services
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 
 
 var app = builder.Build();
