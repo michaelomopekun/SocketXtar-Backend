@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Application.Dtos;
+using Application.Users.Common.Exceptions;
 using Application.Users.Common.Profile;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -11,6 +12,7 @@ public class ProfileController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<ProfileController> _logger;
+    private string GetUserEmailClaim() => User.FindFirst(ClaimTypes.Email)?.Value;
 
     public ProfileController(IMediator mediator, ILogger<ProfileController> logger)
     {
@@ -76,7 +78,7 @@ public class ProfileController : ControllerBase
     {
         try
         {
-            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            var email = GetUserEmailClaim();
 
             if (string.IsNullOrEmpty(email)) return Unauthorized(new { status = "error", message = "User email not found in claims" });
 
@@ -92,5 +94,42 @@ public class ProfileController : ControllerBase
             return StatusCode(500, new { status = "error", message = ex.Message });
         }
     }
+
+
+
+    [Authorize]
+    [HttpPost("profile/picture")]
+    public async Task<IActionResult> UploadProfilePicture([FromForm] IFormFile file)
+    {
+        try
+        {
+            var email = GetUserEmailClaim();
+            _logger.LogInformation("Uploading profile picture for user {Email}", email);
+
+            if (file == null || file.Length == 0)
+                return BadRequest(new { status = "error", message = "No file provided." });
+
+            if (string.IsNullOrEmpty(email)) return Unauthorized();
+
+            var response = await _mediator.Send(new UploadProfilePictureCommand(email, file));
+            return Ok(new { status = "success", url = response.Url, message = response.Message });
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "❌User not found for email {Email}", User.FindFirst(ClaimTypes.Email)?.Value);
+            return NotFound(new { status = "error", message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "❌Invalid file provided for user {Email}", User.FindFirst(ClaimTypes.Email)?.Value);
+            return BadRequest(new { status = "error", message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌Error uploading profile picture for user {Email}", User.FindFirst(ClaimTypes.Email)?.Value);
+            return StatusCode(500, new { status = "error", message = ex.Message });
+        }
+    }
+
 
 }

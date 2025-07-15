@@ -36,7 +36,7 @@ public class UpdateUserProfileHandler : IRequestHandler<UpdateUserProfileCommand
                 {
                     user.UserName = request.Request.UserName;
                 }
-                else if (userNameExists != null && user.UserName != request.Request.UserName)
+                else if (userNameExists != null && user.UserName == request.Request.UserName)
                 {
                     _logger.LogWarning("Username {UserName} already exists", request.Request.UserName);
 
