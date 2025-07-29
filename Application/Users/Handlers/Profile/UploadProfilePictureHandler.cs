@@ -30,7 +30,7 @@ public class UploadProfilePictureHandler : IRequestHandler<UploadProfilePictureC
             user.UpdatedAt = DateTime.UtcNow;
 
             await _userRepository.UpdateUserAsync(user);
-            await _redis.RemoveAsync($"profile:{user.Email}");
+            await _redis.RemoveAsync($"UserProfile:{user.Email}");
 
             return new UploadProfilePictureResponse
             {

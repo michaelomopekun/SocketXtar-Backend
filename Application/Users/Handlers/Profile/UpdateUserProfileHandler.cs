@@ -52,7 +52,7 @@ public class UpdateUserProfileHandler : IRequestHandler<UpdateUserProfileCommand
 
             var result = await _userRepository.UpdateUserAsync(user);
 
-            await _redis.RemoveAsync($"profile:{user.Email}");
+            await _redis.RemoveAsync($"UserProfile:{user.Email}");
 
             return result;
         }
