@@ -60,7 +60,7 @@ public class RegisterUserHandler : IRequestHandler<RegisterUserRequest, Register
 
                 await _redis.SetStringAsync($"verify:{newUser.Email}", token, new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15) });
 
-                await _emailService.SendVerificationEmailAsync(newUser.Email, token);
+                await _emailService.SendVerificationEmailAsync(newUser.FirstName, newUser.Email, token);
 
                 _logger.LogInformation("==========✅ User registered and verification email sent to {Email}==========", newUser.Email);
 

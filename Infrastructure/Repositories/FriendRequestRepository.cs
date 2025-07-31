@@ -71,6 +71,23 @@ public class FriendRequestRepository : IFriendRequestRepository
         }
     }
 
+    public async Task<FriendRequest> GetFriendRequestBySenderAndReceiverUsernameAsync(string senderUserName, string receiverUserName)
+    {
+        try
+        {
+            var friendRequest = await _context.FriendRequests.FirstOrDefaultAsync(fr => fr.SenderUserName == senderUserName && fr.ReceiverUserName == receiverUserName);
+
+            if (friendRequest == null) return null!;
+
+            return friendRequest;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌Error fetching friend request by sender and receiver username");
+            return null!;
+        }
+    }
+
     public async Task<FriendRequest?> GetFriendRequestByIdAsync(Guid id)
     {
         try

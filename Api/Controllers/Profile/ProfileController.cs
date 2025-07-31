@@ -13,13 +13,13 @@ public class ProfileController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<ProfileController> _logger;
-    private string GetUserEmailClaim() => User.FindFirst(ClaimTypes.Email)?.Value
-                                            ?? throw new UnauthorizedAccessException("User email not found in claims");
+    private readonly IUserContextService _userContextService;
 
-    public ProfileController(IMediator mediator, ILogger<ProfileController> logger)
+    public ProfileController(IMediator mediator, ILogger<ProfileController> logger, IUserContextService userContextService)
     {
         _mediator = mediator;
         _logger = logger;
+        _userContextService = userContextService;
     }
 
     [Authorize]
@@ -33,7 +33,7 @@ public class ProfileController : ControllerBase
         
         try
         {
-            var email = GetUserEmailClaim();
+            var email = _userContextService.GetUserEmailClaim();
             if (string.IsNullOrEmpty(email))
             {
                 _logger.LogWarning("User email not found in claims");
@@ -82,7 +82,7 @@ public class ProfileController : ControllerBase
 
         try
         {
-            var email = GetUserEmailClaim();
+            var email = _userContextService.GetUserEmailClaim();
             _logger.LogInformation("Updating user profile for email: {Email}", email);
 
             if (string.IsNullOrEmpty(email)) return Unauthorized(new { status = "error", message = "User email not found in claims" });
@@ -111,7 +111,7 @@ public class ProfileController : ControllerBase
     {
         try
         {
-            var email = GetUserEmailClaim();
+            var email = _userContextService.GetUserEmailClaim();
             _logger.LogInformation("Uploading profile picture for user {Email}", email);
 
             if (request.PictureFile == null || request.PictureFile.Length == 0)
@@ -125,17 +125,17 @@ public class ProfileController : ControllerBase
         }
         catch (NotFoundException ex)
         {
-            _logger.LogWarning(ex, "❌User not found for email {Email}", GetUserEmailClaim());
+            _logger.LogWarning(ex, "❌User not found for email {Email}", _userContextService.GetUserEmailClaim());
             return NotFound(new { status = "error", message = ex.Message });
         }
         catch (ArgumentException ex)
         {
-            _logger.LogWarning(ex, "❌Invalid file provided for user {Email}", GetUserEmailClaim());
+            _logger.LogWarning(ex, "❌Invalid file provided for user {Email}", _userContextService.GetUserEmailClaim());
             return BadRequest(new { status = "error", message = ex.Message });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌Error uploading profile picture for user {Email}", GetUserEmailClaim());
+            _logger.LogError(ex, "❌Error uploading profile picture for user {Email}", _userContextService.GetUserEmailClaim());
             return StatusCode(500, new { status = "error", message = ex.Message });
         }
     }

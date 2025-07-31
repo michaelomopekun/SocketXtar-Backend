@@ -15,7 +15,7 @@ public class EmailService : IEmailService
         _logger = logger;
     }
 
-    public async Task SendVerificationEmailAsync(string toEmail, string token)
+    public async Task SendVerificationEmailAsync(string firstName, string toEmail, string token)
     {
         var apiKey = Environment.GetEnvironmentVariable("SENDGRID_KEY");
 
@@ -34,7 +34,7 @@ public class EmailService : IEmailService
                 <div style='max-width: 500px; margin: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 32px;'>
                     <h2 style='color: #2d3748; text-align: center;'>Welcome to SocketXtar!</h2>
                     <p style='color: #4a5568; font-size: 16px; text-align: center;'>
-                        Thank you for registering. Please verify your email address to activate your account.
+                        Thank you {firstName} for registering. Please verify your email address to activate your account.
                     </p>
                     <div style='text-align: center; margin: 32px 0;'>
                         <a href='{link}' style='background: #4f46e5; color: #fff; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block;'>

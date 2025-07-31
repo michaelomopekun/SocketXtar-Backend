@@ -18,6 +18,7 @@ using CloudinaryDotNet;
 using Application.Users.Common.Exceptions;
 
 EnvLoader.Load();
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -124,12 +125,15 @@ builder.Services.AddSingleton(serviceProvider =>
 
 // Register services
 //services
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+builder.Services.AddScoped<IUserContextService, UserContextService>();
 //repos
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
+
 
 
 var app = builder.Build();
