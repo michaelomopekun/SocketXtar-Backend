@@ -3,10 +3,14 @@ using Api.Controllers.Profile;
 using Application.Users.Commands.FriendRequest;
 using Application.Users.Dtos.FriendRequest;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers.FriendRequest;
 
+
+[ApiController]
+[Route("api/[controller]")]
 public class FriendRequestController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -22,6 +26,7 @@ public class FriendRequestController : ControllerBase
 
 
     [HttpPost]
+    [Authorize]
     [Route("send-friend-request")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
