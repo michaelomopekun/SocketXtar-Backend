@@ -131,4 +131,31 @@ public class FriendRequestRepository : IFriendRequestRepository
         }
     }
 
+    public async Task<bool> UpdateFriendRequestAsync(FriendRequest friendRequest)
+    {
+        try
+        {
+            _context.FriendRequests.Update(friendRequest);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌Error updating friend request");
+            return false;
+        }
+    }
+
+    public Task<bool> IsFriendRequestExistsAsync(string senderUserName, string receiverUserName)
+    {
+        try
+        {
+            return _context.FriendRequests.AnyAsync(fr => fr.SenderUserName == senderUserName && fr.ReceiverUserName == receiverUserName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌Error checking if friend request exists");
+            return Task.FromResult(false);
+        }
+    }
 }
