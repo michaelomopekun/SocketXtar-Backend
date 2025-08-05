@@ -1,3 +1,5 @@
+using Domain.Enums;
+
 namespace Domain.Entities;
 
 public class FriendRequest
@@ -8,7 +10,8 @@ public class FriendRequest
     public string ReceiverUserName { get; set; } = string.Empty;
     public Guid ReceiverId { get; set; }
     public DateTime SentAt { get; set; }
-    public bool IsAccepted { get; set; }
+    public RequestStatus IsAccepted { get; set; } = RequestStatus.Pending;
+    public DateTime? RejectedAt { get; set; }
     public DateTime? AcceptedAt { get; set; }
     public User Sender { get; set; } = new User();
     public User Receiver { get; set; } = new User();

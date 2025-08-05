@@ -2,20 +2,18 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Persistence.Data;
 
 #nullable disable
 
-namespace Persistence.Data.Postgres.Migrations
+namespace Persistence.Migrations
 {
     [DbContext(typeof(ChatAppDBContext))]
-    [Migration("20250729230310_AddFriendRequestTable")]
-    partial class AddFriendRequestTable
+    partial class ChatAppDBContextModelSnapshot : ModelSnapshot
     {
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -31,10 +29,10 @@ namespace Persistence.Data.Postgres.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime?>("AcceptedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
-                    b.Property<bool>("IsAccepted")
-                        .HasColumnType("boolean");
+                    b.Property<int>("IsAccepted")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("ReceiverId")
                         .HasColumnType("uuid");
@@ -42,6 +40,9 @@ namespace Persistence.Data.Postgres.Migrations
                     b.Property<string>("ReceiverUserName")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<Guid>("SenderId")
                         .HasColumnType("uuid");
@@ -51,7 +52,7 @@ namespace Persistence.Data.Postgres.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("SentAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -72,7 +73,7 @@ namespace Persistence.Data.Postgres.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -90,7 +91,7 @@ namespace Persistence.Data.Postgres.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("LastLoggedInAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -100,7 +101,7 @@ namespace Persistence.Data.Postgres.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("UserName")
                         .IsRequired()

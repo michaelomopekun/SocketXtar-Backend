@@ -5,6 +5,7 @@ using Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using Domain.Enums;
 
 namespace Application.Users.Handlers.FriendRequest;
 
@@ -83,7 +84,7 @@ public class SendFriendRequestHandler : IRequestHandler<SendFriendRequestCommand
                 ReceiverId = receiver.UserId,
                 SenderUserName = sender.UserName,
                 ReceiverUserName = request.ReceiverUserName,
-                IsAccepted = false,
+                IsAccepted = RequestStatus.Pending,
                 SentAt = DateTime.UtcNow
             };
 
