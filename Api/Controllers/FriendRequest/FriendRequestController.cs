@@ -1,6 +1,7 @@
 using Api.Controllers.Auth;
 using Api.Controllers.Profile;
 using Application.Users.Commands.FriendRequest;
+using Application.Users.Common.Exceptions;
 using Application.Users.Dtos.FriendRequest;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -55,6 +56,38 @@ public class FriendRequestController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "❌Error sending friend request");
+            return StatusCode(500, new { status = "error", message = ex.Message });
+        }
+    }
+
+    [HttpPost]
+    [Authorize]
+    [Route("friend-request-decision")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> AcceptRejectFriendRequest([FromBody] FriendRequestDecisionDTO request)
+    {
+        try
+        {
+            var result = await _mediator.Send(new AcceptRejectFriendRequestCommand(request));
+
+            return Ok(new { status = "success", message = result.Message, data = result });
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogError(ex, "❌Friend request not found");
+            return NotFound(new { status = "error", message = ex.Message });
+        }
+        catch (ArgumentNullException ex)
+        {
+            _logger.LogError(ex, "❌Invalid request data");
+            return BadRequest(new { status = "error", message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌Error accepting/rejecting friend request");
             return StatusCode(500, new { status = "error", message = ex.Message });
         }
     }

@@ -3,4 +3,4 @@ using MediatR;
 
 namespace Application.Users.Commands.FriendRequest;
 
-public record AcceptRejectFriendRequestCommand(FriendRequestDecisionDTO Decision): IRequest<FriendRequestDecisionDTO>;
+public record AcceptRejectFriendRequestCommand(FriendRequestDecisionDTO Decision): IRequest<FriendRequestDecisionResponseDTO>;
