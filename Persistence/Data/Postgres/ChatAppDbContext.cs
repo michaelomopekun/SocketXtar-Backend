@@ -38,5 +38,27 @@ public class ChatAppDBContext : DbContext
                 .HasForeignKey(r => r.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+
+        builder.Entity<Friend>(builder =>
+        {
+            builder.HasKey(f => f.Id);
+
+            builder.HasOne(f => f.User)
+                .WithMany()
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(f => f.FriendUser)
+                .WithMany()
+                .HasForeignKey(f => f.FriendUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasIndex(f => new { f.UserId, f.FriendUserId })
+                .IsUnique();
+
+            builder.Property(f => f.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
+        });
+
     }
 }
