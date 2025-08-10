@@ -133,6 +133,7 @@ builder.Services.AddScoped<IUserContextService, UserContextService>();
 //repos
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
+builder.Services.AddScoped<IFriendRepository, FriendRepository>();
 
 
 

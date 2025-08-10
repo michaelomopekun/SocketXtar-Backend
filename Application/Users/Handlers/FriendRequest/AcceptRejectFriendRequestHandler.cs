@@ -1,6 +1,7 @@
 using Application.Users.Commands.FriendRequest;
 using Application.Users.Common.Exceptions;
 using Application.Users.Dtos.FriendRequest;
+using Domain.Entities;
 using Domain.Enums;
 using Domain.Interfaces.Repositories;
 using MediatR;
@@ -14,12 +15,14 @@ public class AcceptRejectFriendRequestHandler : IRequestHandler<AcceptRejectFrie
     private readonly IFriendRequestRepository _friendRequestRepository;
     private readonly ILogger<AcceptRejectFriendRequestHandler> _logger;
     private readonly IUserContextService _userContextService;
+    private readonly IFriendRepository _friendRepository;
 
-    public AcceptRejectFriendRequestHandler(IFriendRequestRepository friendRequestRepository, ILogger<AcceptRejectFriendRequestHandler> logger, IUserContextService userContextService)
+    public AcceptRejectFriendRequestHandler(IFriendRequestRepository friendRequestRepository, ILogger<AcceptRejectFriendRequestHandler> logger, IUserContextService userContextService, IFriendRepository friendRepository)
     {
         _friendRequestRepository = friendRequestRepository;
         _logger = logger;
         _userContextService = userContextService;
+        _friendRepository = friendRepository;
     }
 
     public async Task<FriendRequestDecisionResponseDTO> Handle(AcceptRejectFriendRequestCommand request, CancellationToken cancellationToken)
@@ -38,6 +41,28 @@ public class AcceptRejectFriendRequestHandler : IRequestHandler<AcceptRejectFrie
             {
                 friendRequest.IsAccepted = RequestStatus.Accepted;
                 friendRequest.AcceptedAt = DateTime.UtcNow;
+
+                var friend1 = new Friend
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = friendRequest.SenderId,
+                    UserName = friendRequest.SenderUserName,
+                    FriendUserId = friendRequest.ReceiverId,
+                    FriendUserName = friendRequest.ReceiverUserName,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                var friend2 = new Friend
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = friendRequest.ReceiverId,
+                    UserName = friendRequest.ReceiverUserName,
+                    FriendUserId = friendRequest.SenderId,
+                    FriendUserName = friendRequest.SenderUserName,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _friendRepository.AddFriendAsync(friend1, friend2);
             }
             else if (!request.Decision.IsAccepted)
             {
