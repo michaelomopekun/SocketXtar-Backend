@@ -12,7 +12,7 @@ public class ChatAppDBContext : DbContext
 
     public DbSet<User> User { get; set; } = null!;
     public DbSet<FriendRequest> FriendRequests { get; set; } = null!;
-    public DbSet<Friend> Friends { get; set; } = null!;
+    public DbSet<Friend> Friend { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

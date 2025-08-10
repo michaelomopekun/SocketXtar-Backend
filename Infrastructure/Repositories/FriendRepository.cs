@@ -28,7 +28,7 @@ public class FriendRepository : IFriendRepository
             {
                 var friend = i == 0 ? friend1 : friend2;
 
-                _content.Friends.Add(friend);
+                _content.Friend.Add(friend);
 
                 await _content.SaveChangesAsync();
             }
@@ -49,7 +49,7 @@ public class FriendRepository : IFriendRepository
         if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(friendUserName))
             throw new ArgumentException("UserName and FriendUserName cannot be null or empty");
 
-        return _content.Friends
+        return _content.Friend
             .FirstOrDefaultAsync(f => f.UserName == userName && f.FriendUserName == friendUserName);
     }
 
@@ -58,7 +58,7 @@ public class FriendRepository : IFriendRepository
         if (string.IsNullOrEmpty(userName))
             throw new ArgumentException("UserName cannot be null or empty");
 
-        return await _content.Friends
+        return await _content.Friend
             .Where(f => f.UserName == userName)
             .ToListAsync();
     }
@@ -68,14 +68,14 @@ public class FriendRepository : IFriendRepository
         if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(friendUserName))
             throw new ArgumentException("UserName and FriendUserName cannot be null or empty");
 
-        var friend = await _content.Friends
+        var friend = await _content.Friend
             .FirstOrDefaultAsync(f => f.UserName == userName && f.FriendUserName == friendUserName);
 
         if (friend == null) return false;
 
-        _content.Friends.Remove(friend);
+        _content.Friend.Remove(friend);
         await _content.SaveChangesAsync();
-        
+
         return true;
     }
 

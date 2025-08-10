@@ -45,6 +45,11 @@ public class LoginUserHandler : IRequestHandler<LoginUserRequest, LoginUserRespo
                 ProfilePictureUrl = user.ProfilePictureURL
             };
         }
+    catch (UnauthorizedAccessException ex)
+    {
+        _logger.LogWarning(ex, "❌ Unauthorized login attempt for email: {Email}", request.Email);
+        throw new UnauthorizedAccessException("unauthorized access. Please check your credentials.");
+    }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"❌error logging in user {request.Email}");

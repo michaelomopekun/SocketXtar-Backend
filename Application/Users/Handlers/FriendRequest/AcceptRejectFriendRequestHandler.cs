@@ -66,8 +66,7 @@ public class AcceptRejectFriendRequestHandler : IRequestHandler<AcceptRejectFrie
             }
             else if (!request.Decision.IsAccepted)
             {
-                friendRequest.IsAccepted = RequestStatus.Rejected;
-                friendRequest.RejectedAt = DateTime.UtcNow;
+                await _friendRequestRepository.DeleteFriendRequestByIdAsync(request.Decision.RequestId);
             }
 
             var updateResult = await _friendRequestRepository.UpdateFriendRequestAsync(friendRequest);

@@ -49,7 +49,7 @@ public class SendFriendRequestHandler : IRequestHandler<SendFriendRequestCommand
 
             var requestExists = await _friendRequestRepository.GetFriendRequestBySenderAndReceiverUsernameAsync(sender.UserName, request.ReceiverUserName);
 
-            if (requestExists != null)
+            if (requestExists != null && requestExists.IsAccepted == RequestStatus.Pending)
             {
                 return new SendFriendRequestResponseDto
                 {
