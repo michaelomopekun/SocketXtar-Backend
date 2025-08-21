@@ -28,8 +28,8 @@ public class GetAllFriendRequestHandler : IRequestHandler<GetAllFriendRequestQue
 
         var friendRequests = await _friendRequestRepository.GetFriendRequestsByReceiverUsernameAsync(user.UserName) ?? throw new Exception("user does not have a friend request");
 
-        // if()
-        return null!;
+        
+        return (List<FriendRequestDTO>)friendRequests;
 
 
 
